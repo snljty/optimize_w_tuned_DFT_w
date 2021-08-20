@@ -1,0 +1,52 @@
+# Makefile for optimize_DFT_w
+
+SHELL = /bin/bash
+CC = gcc
+CLINKER = $(CC)
+CLINKERFLAGS = -static
+CCFLAGS = -O3
+ARCH = ar
+ARCHFLAGS = -rsc
+
+LIBNAME := brent_fmin
+TARGETNAME = optimize_DFT_w
+
+.PHONY: all
+all: lib $(TARGETNAME)
+
+.PHONY: lib
+lib: lib$(LIBNAME).a
+
+lib$(LIBNAME).a: $(LIBNAME).o
+	@echo Generating archive $@ from $^ ...
+	$(ARCH) $(ARCHFLAGS) $@ $^
+
+$(LIBNAME).o: $(LIBNAME).c
+	@echo Compiling $@ ...
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+.PHONY: $(TARGETNAME)
+$(TARGETNAME): $(TARGETNAME).x
+
+$(TARGETNAME).x: $(TARGETNAME).o lib$(LIBNAME).a
+	@echo Linking $@ against $^ ...
+	$(CLINKER) -o $@ $< -L . -l $(LIBNAME) $(CLINKERFLAGS)
+
+$(TARGETNAME).o: $(TARGETNAME).c
+	@echo Compiling $@ ...
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+.PHONY: clean
+clean: clean_tmp
+	-rm -f $(TARGETNAME).x
+
+.PHONY: clean_tmp
+clean_tmp:
+	-rm -f $(LIBNAME).o
+	-rm -f $(TARGETNAME).o
+	-rm -f lib$(LIBNAME).a
+
+.PHONY: clean_$(TARGETNAME)
+clean_$(TARGETNAME): clean_exe
+	-rm -f $(TARGETNAME).o
+
